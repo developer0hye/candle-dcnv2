@@ -11,8 +11,14 @@ fn load_test_case(name: &str) -> std::collections::HashMap<String, Tensor> {
         .tensors()
         .into_iter()
         .map(|(name, view)| {
-            let tensor =
-                Tensor::from_raw_buffer(view.data(), DType::F32, view.shape(), device).unwrap();
+            let dtype = match view.dtype() {
+                safetensors::Dtype::F32 => DType::F32,
+                safetensors::Dtype::F64 => DType::F64,
+                safetensors::Dtype::I64 => DType::I64,
+                safetensors::Dtype::U32 => DType::U32,
+                dt => panic!("unsupported dtype {dt:?} for tensor {name}"),
+            };
+            let tensor = Tensor::from_raw_buffer(view.data(), dtype, view.shape(), device).unwrap();
             (name.to_string(), tensor)
         })
         .collect()
@@ -98,4 +104,64 @@ fn golden_non_square_input() -> Result<()> {
 #[test]
 fn golden_batch_1() -> Result<()> {
     run_golden_test("batch_1", (1, 1), (1, 1))
+}
+
+// --- BiRefNet real-model tests ---
+// These use tensors captured from a pretrained BiRefNet model's deform_conv2d calls.
+// Parameters (stride, padding, dilation) are stored as scalar tensors in the safetensors file.
+
+fn read_scalar_usize(data: &std::collections::HashMap<String, Tensor>, key: &str) -> usize {
+    data[key].to_scalar::<i64>().unwrap() as usize
+}
+
+fn run_birefnet_test(name: &str) -> Result<()> {
+    let data = load_test_case(name);
+    let bias = data.get("bias");
+    let mask = data.get("mask");
+
+    let stride_h = read_scalar_usize(&data, "stride_h");
+    let stride_w = read_scalar_usize(&data, "stride_w");
+    let padding_h = read_scalar_usize(&data, "padding_h");
+    let padding_w = read_scalar_usize(&data, "padding_w");
+    let dilation_h = read_scalar_usize(&data, "dilation_h");
+    let dilation_w = read_scalar_usize(&data, "dilation_w");
+
+    let result = deform_conv2d(
+        &data["input"],
+        &data["offset"],
+        &data["weight"],
+        bias,
+        mask,
+        (stride_h, stride_w),
+        (padding_h, padding_w),
+        (dilation_h, dilation_w),
+    )?;
+
+    assert_tensor_close(&result, &data["output"], 1e-4);
+    Ok(())
+}
+
+#[test]
+fn birefnet_dcn_1x1_kernel() -> Result<()> {
+    run_birefnet_test("birefnet_dcn_1")
+}
+
+#[test]
+fn birefnet_dcn_3x3_kernel() -> Result<()> {
+    run_birefnet_test("birefnet_dcn_2")
+}
+
+#[test]
+fn birefnet_dcn_7x7_kernel() -> Result<()> {
+    run_birefnet_test("birefnet_dcn_3")
+}
+
+#[test]
+fn birefnet_dcn_64x64_spatial() -> Result<()> {
+    run_birefnet_test("birefnet_dcn_4")
+}
+
+#[test]
+fn birefnet_dcn_64x64_3x3() -> Result<()> {
+    run_birefnet_test("birefnet_dcn_5")
 }
