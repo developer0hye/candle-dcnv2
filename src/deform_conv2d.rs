@@ -10,6 +10,7 @@ use crate::validation::{DeformConv2dParams, validate_and_extract};
 /// `groups` and `offset_groups` are inferred from tensor shapes:
 ///   - groups = C_in / weight.shape[1]
 ///   - offset_groups = offset.shape[1] / (2 * kH * kW)
+#[allow(clippy::too_many_arguments)] // Matches torchvision.ops.deform_conv2d signature
 pub fn deform_conv2d(
     input: &Tensor,
     offset: &Tensor,

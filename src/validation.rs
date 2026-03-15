@@ -16,6 +16,7 @@ pub struct DeformConv2dParams {
     pub offset_groups: usize,
 }
 
+#[allow(clippy::too_many_arguments)] // Mirrors deform_conv2d() signature
 pub fn validate_and_extract(
     input: &Tensor,
     offset: &Tensor,
@@ -60,21 +61,24 @@ pub fn validate_and_extract(
 
     // Infer groups from tensor shapes (matches PyTorch convention)
     let channels_per_group = weight_dims[1];
-    if in_channels == 0 || channels_per_group == 0 || in_channels % channels_per_group != 0 {
+    if in_channels == 0
+        || channels_per_group == 0
+        || !in_channels.is_multiple_of(channels_per_group)
+    {
         bail!(
             "deform_conv2d: C_in ({in_channels}) must be divisible by weight.shape[1] ({channels_per_group})"
         );
     }
     let groups = in_channels / channels_per_group;
 
-    if out_channels % groups != 0 {
+    if !out_channels.is_multiple_of(groups) {
         bail!("deform_conv2d: C_out ({out_channels}) must be divisible by groups ({groups})");
     }
 
     // Infer offset_groups from offset shape
     let offset_channels = offset_dims[1];
     let kernel_size = kernel_h * kernel_w;
-    if kernel_size == 0 || offset_channels % (2 * kernel_size) != 0 {
+    if kernel_size == 0 || !offset_channels.is_multiple_of(2 * kernel_size) {
         bail!(
             "deform_conv2d: offset.shape[1] ({offset_channels}) must be divisible by 2 * kH * kW ({})",
             2 * kernel_size
