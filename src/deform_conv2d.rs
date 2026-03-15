@@ -37,17 +37,12 @@ fn deformable_im2col(
     stride: (usize, usize),
     padding: (usize, usize),
 ) -> Result<Tensor> {
-    let DeformConv2dParams {
-        batch_size,
-        in_channels,
-        in_h,
-        in_w,
-        kernel_h,
-        kernel_w,
-        out_h,
-        out_w,
-        ..
-    } = *params;
+    let batch_size = params.batch_size;
+    let in_channels = params.in_channels;
+    let kernel_h = params.kernel_h;
+    let kernel_w = params.kernel_w;
+    let out_h = params.out_h;
+    let out_w = params.out_w;
 
     let (stride_h, stride_w) = stride;
     let (pad_h, pad_w) = padding;

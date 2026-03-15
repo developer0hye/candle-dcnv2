@@ -1,6 +1,7 @@
 use candle_core::{Result, Tensor, bail};
 
 /// Validated parameters extracted from input tensor shapes.
+#[allow(dead_code)] // groups/offset_groups validated but not yet used (only =1 supported)
 pub struct DeformConv2dParams {
     pub batch_size: usize,
     pub in_channels: usize,
