@@ -14,3 +14,4 @@ candle-nn = "0.9"
 
 [dev-dependencies]
 anyhow = "1"
+safetensors = "0.5"
