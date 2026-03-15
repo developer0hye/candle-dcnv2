@@ -16,6 +16,7 @@ pub struct DeformConv2d {
 }
 
 impl DeformConv2d {
+    #[allow(clippy::too_many_arguments)] // Matches torchvision.ops.DeformConv2d signature
     pub fn new(
         in_channels: usize,
         out_channels: usize,

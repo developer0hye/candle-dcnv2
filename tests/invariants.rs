@@ -274,17 +274,17 @@ fn output_shape_formula() -> Result<()> {
     let dev = &Device::Cpu;
 
     // Test various configurations
-    let configs: Vec<(usize, usize, usize, usize, usize, usize, usize, usize)> = vec![
-        // (C_in, C_out, H, W, kH, kW, stride, pad)
-        (3, 8, 8, 8, 3, 3, 1, 1),    // standard
-        (3, 8, 8, 8, 3, 3, 2, 1),    // strided
-        (3, 8, 8, 8, 3, 3, 1, 0),    // no padding
-        (3, 8, 16, 12, 5, 3, 1, 0),  // non-square kernel, non-square input
-        (3, 8, 7, 7, 3, 3, 2, 1),    // odd spatial, strided
-        (64, 128, 1, 1, 1, 1, 1, 0), // 1x1
+    // (C_in, C_out, H, W, kH, kW, stride, pad)
+    let configs: Vec<[usize; 8]> = vec![
+        [3, 8, 8, 8, 3, 3, 1, 1],    // standard
+        [3, 8, 8, 8, 3, 3, 2, 1],    // strided
+        [3, 8, 8, 8, 3, 3, 1, 0],    // no padding
+        [3, 8, 16, 12, 5, 3, 1, 0],  // non-square kernel, non-square input
+        [3, 8, 7, 7, 3, 3, 2, 1],    // odd spatial, strided
+        [64, 128, 1, 1, 1, 1, 1, 0], // 1x1
     ];
 
-    for (c_in, c_out, h, w, kh, kw, s, p) in configs {
+    for [c_in, c_out, h, w, kh, kw, s, p] in configs {
         let out_h = (h + 2 * p - kh) / s + 1;
         let out_w = (w + 2 * p - kw) / s + 1;
 
